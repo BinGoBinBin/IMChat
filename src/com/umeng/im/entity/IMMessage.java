@@ -15,7 +15,7 @@ import android.text.TextUtils;
 /**
  * 发送的消息实体
  */
-public class IMMessage {
+public class IMMessage{
 	
 	private static final String TAG = IMMessage.class.getName();
 	public String content;
@@ -36,6 +36,9 @@ public class IMMessage {
 			jsonObject.put("content", content);
 			jsonObject.put("date", date);
 			jsonObject.put("fileName", fileName);
+			jsonObject.put("path", path);
+			jsonObject.put("type", type.toString());
+			jsonObject.put("user", user);
 		} catch (JSONException e) {
 			e.printStackTrace();
 		}
@@ -62,8 +65,16 @@ public class IMMessage {
 			message = new IMMessage();
 			String content = (String) jsonObject.opt("content");
 			long date = jsonObject.optLong("date");
+			String fileName = jsonObject.optString("fileName");
+			String path = jsonObject.optString("path");
+			MessageType type = MessageType.convertMessageType(jsonObject.optString("type"));
+			String user = jsonObject.optString("user"); 
 			message.content = content;
 			message.date = date;
+			message.fileName = fileName;
+			message.path = path;
+			message.type = type;
+			message.user = user;
 		} catch (Exception e) {
 			e.printStackTrace();
 			DebugLog.e(TAG, "parse message fail,message body:" + json);
@@ -80,4 +91,12 @@ public class IMMessage {
 	public static IMMessage getIMMessage(){
 		return new IMMessage();
 	}
+
+	@Override
+	public String toString() {
+		return "IMMessage [content=" + content + ", fileName=" + fileName
+				+ ", path=" + path + ", date=" + date + ", type=" + type
+				+ ", user=" + user + "]";
+	}
+	
 }

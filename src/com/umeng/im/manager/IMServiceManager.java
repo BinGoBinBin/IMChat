@@ -18,8 +18,6 @@ import com.umeng.im.listener.OnAddFriendListener;
 import com.umeng.im.listener.OnAddGroupListener;
 import com.umeng.im.listener.OnLoginListener;
 import com.umeng.im.listener.OnVerifyUserNamePwdListener;
-import com.umeng.im.message.IMMessageHandler;
-import com.umeng.im.message.Message;
 import com.umeng.im.service.IMService;
 import com.umeng.im.service.impl.IMServiceImp;
 
@@ -32,7 +30,6 @@ public class IMServiceManager {
 	private IMService mIMService;
 	private BaseContextEntity mBaseContextEntity;
 	private static IMServiceManager instance = new IMServiceManager();
-	private IMMessageHandler handler = new IMMessageHandler();
 	
 	private IMServiceManager() {
 		mIMService = IMServiceImp.getInstance();
@@ -148,13 +145,11 @@ public class IMServiceManager {
 			DebugLog.e(TAG, "content is null...");
 			return;
 		}
-		IMMessage msg = new IMMessage();
-		msg.type = MessageType.TEXT;
-		msg.content = content;
-		msg.user = user;
-		Message message = new Message();
-		message.obj = msg;
-		handler.sendMessage(message);
+		IMMessage message = new IMMessage();
+		message.content = content;
+		message.type = MessageType.TEXT;
+		message.user = user;
+		mIMService.sendMessage(message);
 	}
 
 	/**
