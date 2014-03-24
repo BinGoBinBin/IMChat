@@ -20,12 +20,14 @@ import org.jivesoftware.smack.packet.Presence;
 import org.jivesoftware.smack.util.StringUtils;
 import org.jivesoftware.smackx.filetransfer.FileTransferListener;
 import org.jivesoftware.smackx.filetransfer.FileTransferRequest;
+import org.jivesoftware.smackx.filetransfer.FileTranslateProgressListener;
 import org.jivesoftware.smackx.filetransfer.IncomingFileTransfer;
 
 import android.text.TextUtils;
 
 import com.umeng.im.common.DebugLog;
 import com.umeng.im.common.UserStatus;
+import com.umeng.im.entity.BaseContextEntity;
 import com.umeng.im.entity.Friend;
 import com.umeng.im.entity.Group;
 import com.umeng.im.listener.OnFileTransferListener;
@@ -264,5 +266,40 @@ public class IMServiceUtils {
 			}
 		};
 		return listener;
+	}
+	
+	public static FileTranslateProgressListener getFileTranslateProgressListener(){
+		final OnFileTransferListener listener = BaseContextEntity.getInstance().getFileTransferListener();
+		if(listener == null){
+			return null;
+		}
+		FileTranslateProgressListener progressListener = new FileTranslateProgressListener() {
+			
+			@Override
+			public void updateProgress(double progress) {
+				listener.onUpdateProgress(progress);
+			}
+			
+			@Override
+			public void onStart(String fileName) {
+				listener.onStart();
+			}
+			
+			@Override
+			public void onError(String message) {
+				listener.onError(message);
+			}
+			
+			@Override
+			public void onComplete() {
+				listener.onComplete();
+			}
+			
+			@Override
+			public boolean isReceive(String user, String fileName, long size) {
+				return false;
+			}
+		};
+		return progressListener;
 	}
 }

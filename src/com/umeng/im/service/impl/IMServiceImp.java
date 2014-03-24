@@ -376,6 +376,7 @@ public class IMServiceImp implements IMService {
 		String serverUser = IMServiceUtils.convertUser(user, mConnection);
 		OutgoingFileTransfer fileTransfer = fileTransferManager
 				.createOutgoingFileTransfer(serverUser);
+		fileTransfer.setFileTranslateProgressListener(IMServiceUtils.getFileTranslateProgressListener());
 		try {
 			fileTransfer.sendFile(file, file.getName());
 		} catch (XMPPException e) {

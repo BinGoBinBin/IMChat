@@ -24,8 +24,6 @@ public class IMManager {
 	private static final String TAG = IMManager.class.getName();
 	private BaseContextEntity mBaseContextEntity;
 	private IMServiceManager mIMServiceManager;
-	private IMMediaRecorderManager mRecorderManager = null;
-	private IMMediaPlayerManager mMediaPlayerManager = null;
 	private static IMManager instance = null;
 	private SmackAndroid mSmackAndroid = null;
 
@@ -191,36 +189,6 @@ public class IMManager {
 		if (listener != null) {
 			mBaseContextEntity.setFileTransferListener(listener);
 		}
-	}
-
-	/**
-	 * 
-	 * </br>启动录音功能</br>
-	 */
-	public void startRecorder() {
-		mRecorderManager = IMMediaRecorderManager.getInstance();
-		mRecorderManager.prepare();
-		mRecorderManager.start();
-	}
-
-	/**
-	 * 
-	 * </br>停止录音</br>
-	 */
-	public void stopRecorder() {
-		if (mRecorderManager != null) {
-			mRecorderManager.stop();
-			mRecorderManager.shutDown();
-		}
-	}
-
-	/**
-	 * 
-	 * </br>播放录音</br>
-	 */
-	public void play(String path) {
-		mMediaPlayerManager = IMMediaPlayerManager.getInstance();
-		mMediaPlayerManager.play(path);
 	}
 
 	private void init() {
