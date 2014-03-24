@@ -1,38 +1,80 @@
 package com.umeng.im.manager;
 
+import java.util.List;
+
+import org.jivesoftware.smack.SmackAndroid;
+
+import android.content.Context;
+
+import com.umeng.im.common.DebugLog;
 import com.umeng.im.entity.BaseContextEntity;
+import com.umeng.im.entity.IMMessage;
 import com.umeng.im.listener.OnFileTransferListener;
 import com.umeng.im.listener.OnFriendStatusChangeListener;
 import com.umeng.im.listener.OnLoginListener;
 import com.umeng.im.listener.OnMessageListener;
 import com.umeng.im.listener.OnVerifyUserNamePwdListener;
-import com.umeng.im.message.IMLooper;
+import com.umeng.im.utils.IMFileUtils;
 
 /**
  * IMManager主要管理IM的基本操作(登录，发送消息，添加用户等)进行管理.
  */
 public class IMManager {
 
+	private static final String TAG = IMManager.class.getName();
 	private BaseContextEntity mBaseContextEntity;
 	private IMServiceManager mIMServiceManager;
-	private IMMediaRecorderManager mRecorderManager = null;
-	private IMMediaPlayerManager mMediaPlayerManager = null;
-	private static IMManager instance = new IMManager();
+	private static IMManager instance = null;
+	private SmackAndroid mSmackAndroid = null;
 
-	private IMManager() {
+	private IMManager(Context context) {
 		mBaseContextEntity = BaseContextEntity.getInstance();
 		mIMServiceManager = IMServiceManager.getInstance();
-		startMessageLooper();
+		mSmackAndroid = SmackAndroid.init(context);
+		init();
 	}
 
 	/**
 	 * 
-	 * </br>获取全局唯一的IMManager实例</br>
+	 * </br>获取全局唯一的IMManager实例.在获取前，请先调用
+	 * {@link #IMManager.initIMManager(Context context)} 初始化相关的资源</br>
 	 * 
 	 * @return 全局唯一的IMManager实例
 	 */
 	public static IMManager getInstance() {
+		if (instance == null) {
+			DebugLog.e(
+					TAG,
+					"please init IMManager first,invoke method is \"IMManager.initIMManager(Context context)\"");
+		}
 		return instance;
+	}
+
+	/**
+	 * 
+	 * </br>初始化IMManager对象以及Smack的相关配置</br>
+	 * 
+	 * @param context
+	 */
+	public synchronized static void initIMManager(Context context) {
+		if (instance != null) {
+			return;
+		}
+		if (context == null) {
+			DebugLog.w(TAG, " context is null,init failed...");
+			return;
+		}
+		instance = new IMManager(context);
+	}
+
+	/**
+	 * 
+	 * </br>释放Smack Android的相关资源</br>
+	 */
+	public void onDestroyIMManager() {
+		if (mSmackAndroid != null) {
+			mSmackAndroid.onDestroy();
+		}
 	}
 
 	/**
@@ -76,6 +118,30 @@ public class IMManager {
 	 */
 	public void sendMessage(String user, String fileName, String path) {
 		mIMServiceManager.sendMessage(user, fileName, path);
+	}
+
+	/**
+	 * 
+	 * </br>obtain message that is storaged to sdCard According to user
+	 * name.Notes : this operation should be executed on non UI Thread</br>
+	 * 
+	 * @param user
+	 *            user name
+	 * @return a list of IMMessage.
+	 */
+	public List<IMMessage> getIMMessage(String user) {
+		return IMMessageManager.getInstance().getIMMessage(user);
+	}
+
+	/**
+	 * 
+	 * </br>delete message record according to user name</br>
+	 * 
+	 * @param user
+	 *            user name
+	 */
+	public void deleteIMMessage(String user) {
+		IMMessageManager.getInstance().deleteIMMessage(user);
 	}
 
 	/**
@@ -125,48 +191,13 @@ public class IMManager {
 		}
 	}
 
-	/**
-	 * 
-	 * </br>启动录音功能</br>
-	 */
-	public void startRecorder() {
-		mRecorderManager = IMMediaRecorderManager.getInstance();
-		mRecorderManager.prepare();
-		mRecorderManager.start();
-	}
-
-	/**
-	 * 
-	 * </br>停止录音</br>
-	 */
-	public void stopRecorder() {
-		if (mRecorderManager != null) {
-			mRecorderManager.stop();
-			mRecorderManager.shutDown();
+	private void init() {
+		ClassLoader classLoader = getClass().getClassLoader();
+		try {
+			Class.forName(IMMessageManager.class.getName(), true, classLoader);
+			Class.forName(IMFileUtils.class.getName(), true, classLoader);
+		} catch (ClassNotFoundException e) {
+			e.printStackTrace();
 		}
-	}
-
-	/**
-	 * 
-	 * </br>播放录音</br>
-	 */
-	public void play(String path) {
-		mMediaPlayerManager = IMMediaPlayerManager.getInstance();
-		mMediaPlayerManager.play(path);
-	}
-
-	/**
-	 * 
-	 * </br>启动一个消息循环来发送消息</br>
-	 */
-	private void startMessageLooper() {
-		new Thread(new Runnable() {
-
-			@Override
-			public void run() {
-				IMLooper.prepare();
-				IMLooper.loop();
-			}
-		}).start();
 	}
 }

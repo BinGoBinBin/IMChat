@@ -9,6 +9,7 @@ import org.jivesoftware.smack.packet.Message;
 
 import com.umeng.im.entity.BaseContextEntity;
 import com.umeng.im.entity.IMMessage;
+import com.umeng.im.manager.IMMessageManager;
 import com.umeng.im.utils.IMServiceUtils;
 
 /**
@@ -38,6 +39,7 @@ public class OnReceiveMessageListener implements MessageListener {
 		String body = message.getBody();
 		IMMessage msg = IMMessage.parseMessage(body);
 		OnMessageListener messageListener = baseContextEntity.getMessageListener();
+		IMMessageManager.getInstance().saveIMMessage(msg);
 		if(messageListener != null){
 			messageListener.processMessage(user, msg);
 		}

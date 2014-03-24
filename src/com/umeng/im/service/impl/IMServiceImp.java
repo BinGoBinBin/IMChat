@@ -46,8 +46,6 @@ import org.jivesoftware.smackx.provider.VCardProvider;
 import org.jivesoftware.smackx.provider.XHTMLExtensionProvider;
 import org.jivesoftware.smackx.search.UserSearch;
 
-import android.util.Log;
-
 import com.umeng.im.common.Constants;
 import com.umeng.im.common.DebugLog;
 import com.umeng.im.common.IMAsyncTask;
@@ -127,7 +125,7 @@ public class IMServiceImp implements IMService {
 				try {
 					mConnection.login(name, pwd);
 				} catch (XMPPException e) {
-					Log.i(TAG, "login failed...");
+					DebugLog.i(TAG, "login failed...");
 					e.printStackTrace();
 					code = Constants.IM_FAILED;
 				}
@@ -179,7 +177,7 @@ public class IMServiceImp implements IMService {
 				try {
 					roster.createEntry(userName, nikeName, groups);
 				} catch (XMPPException e) {
-					Log.e(TAG, "add user fail...");
+					DebugLog.e(TAG, "add user fail...");
 					e.printStackTrace();
 					code = Constants.IM_FAILED;
 				}
@@ -229,7 +227,7 @@ public class IMServiceImp implements IMService {
 				try {
 					rosterGroup = roster.createGroup(name);
 				} catch (Exception e) {
-					Log.e(TAG, "add group fail...");
+					DebugLog.e(TAG, "add group fail...");
 					e.printStackTrace();
 				}
 				return rosterGroup;
@@ -361,7 +359,7 @@ public class IMServiceImp implements IMService {
 	 * @param message
 	 *            文件
 	 */
-	public void sendFileMessage(IMMessage message) {
+	private void sendFileMessage(IMMessage message) {
 		boolean isLogin = isLogin();
 		if (!isLogin) {
 			DebugLog.e(TAG, "user don't login...");
@@ -372,38 +370,15 @@ public class IMServiceImp implements IMService {
 		File file = new File(path);
 		FileTransferManager fileTransferManager = new FileTransferManager(
 				mConnection);
-
 		// 注册一个文件接收监听器
 		
-		OnFileTransferListener fileTransferListener = mBaseContextEntity
-				.getFileTransferListener();
-
+		
 		String serverUser = IMServiceUtils.convertUser(user, mConnection);
 		OutgoingFileTransfer fileTransfer = fileTransferManager
 				.createOutgoingFileTransfer(serverUser);
-		if (fileTransferListener != null) {
-			fileTransferListener.onStart();
-		}
+		fileTransfer.setFileTranslateProgressListener(IMServiceUtils.getFileTranslateProgressListener());
 		try {
 			fileTransfer.sendFile(file, file.getName());
-			if (fileTransferListener != null) {
-				double progress = 0;
-				while (!fileTransfer.isDone()) {
-					progress = fileTransfer.getProgress();
-					System.out.println("#######"+fileTransfer.getAmountWritten());
-					fileTransferListener.updateProgress(progress);
-//					try {
-//						Thread.sleep(0);
-//					} catch (InterruptedException e) {
-//						e.printStackTrace();
-//					}
-				}
-				if (fileTransfer.isDone()) {
-					fileTransferListener.onComplete(Constants.IM_SUCCESS);
-				} else {
-					fileTransferListener.onComplete(Constants.IM_FAILED);
-				}
-			}
 		} catch (XMPPException e) {
 			e.printStackTrace();
 			DebugLog.e(TAG, "send file fail...");
@@ -423,7 +398,7 @@ public class IMServiceImp implements IMService {
 		if (!mChats.containsKey(user)) {
 			Chat tmpChat = getChat(user);
 			if (tmpChat == null) {
-				Log.e(TAG, "create chat fail...");
+				DebugLog.e(TAG, "create chat fail...");
 				return;
 			}
 			mChats.put(user, tmpChat);
@@ -439,7 +414,7 @@ public class IMServiceImp implements IMService {
 			chat.sendMessage(msg);
 		} catch (XMPPException e) {
 			e.printStackTrace();
-			Log.e(TAG, "send message fail...");
+			DebugLog.e(TAG, "send message fail...");
 		}
 		// TODO消息发送状态需要回调
 	}
@@ -480,7 +455,7 @@ public class IMServiceImp implements IMService {
 	private Roster getRoster() {
 		boolean isLogin = isLogin();
 		if (!isLogin) {
-			Log.e(TAG, "please login...");
+			DebugLog.e(TAG, "please login...");
 			return null;
 		}
 		Roster roster = mConnection.getRoster();
@@ -496,7 +471,7 @@ public class IMServiceImp implements IMService {
 	private ChatManager getChatManager() {
 		boolean isLogin = isLogin();
 		if (!isLogin) {
-			Log.e(TAG, "please login ...");
+			DebugLog.e(TAG, "please login ...");
 			return null;
 		}
 		ChatManager chatManager = mConnection.getChatManager();
@@ -519,13 +494,13 @@ public class IMServiceImp implements IMService {
 				host, port);
 		configuration.setSASLAuthenticationEnabled(isSASLAuthenticationEnabled);
 		configuration.setDebuggerEnabled(isDebug);
-		configure(ProviderManager.getInstance());
+//		configure(ProviderManager.getInstance());
 		mConnection = new XMPPConnection(configuration);
 		try {
 			mConnection.connect();
 			registerFileTransferListener();
 		} catch (XMPPException e) {
-			Log.e(TAG, "connection fail...");
+			DebugLog.e(TAG, "connection fail...");
 			e.printStackTrace();
 			mConnection = null;
 		}
